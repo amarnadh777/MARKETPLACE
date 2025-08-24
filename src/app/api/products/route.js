@@ -12,7 +12,7 @@ const products = [
     subCategory: "Personal Protective Equipment",
     status: "Available",
     vendor: "3M",
-    vendorImage: "/3m1.png",
+    vendorImage: "/3mlog.png",
     image: "/3M4.png",
   },
   {
@@ -38,7 +38,7 @@ const products = [
     subCategory: "Personal Protective Equipment",
     status: "Available",
     vendor: "Honeywell",
-    vendorImage: "/MSA1.png",
+    vendorImage: "/honylogo.png",
     image: "/MSA1.png",
   },
   {
@@ -64,7 +64,7 @@ const products = [
     subCategory: "Electrical",
     status: "Available",
     vendor: "Bosch",
-    vendorImage: "/bosch.jpeg",
+    vendorImage: "/boschlogo.png",
     image: "/bosch.jpeg",
   },
   {
@@ -90,7 +90,7 @@ const products = [
     subCategory: "Electrical",
     status: "Out of Stock",
     vendor: "Makita",
-    vendorImage: "/makita.jpg",
+    vendorImage: "/makita.png",
     image: "/makita.jpg",
   },
   {

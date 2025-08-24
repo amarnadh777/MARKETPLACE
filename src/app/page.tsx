@@ -7,8 +7,10 @@ import ProductCard, { Product } from "@/components/ProductCard";
 import FilterSidebar, { FilterSection, FilterOption } from "@/components/FilterSidebar";
 import Pagination from "@/components/Pagination";
 import SortDropdown from "@/components/SortDropdown";
-import { FormControl, Select, MenuItem, Typography, Box, SelectChangeEvent, Grid } from '@mui/material';
+import { FormControl, Select, MenuItem, Typography, Box, SelectChangeEvent, Grid, Drawer, IconButton, Button, useMediaQuery, useTheme } from '@mui/material';
 import Skeleton from '@mui/material/Skeleton';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import CloseIcon from '@mui/icons-material/Close';
 
 // Define the API response type
 interface ProductsResponse {
@@ -51,6 +53,10 @@ export default function Home() {
   const [categoryData, setCategoryData] = useState<CategoryData | null>(null);
   const [sortBy, setSortBy] = useState('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   // Initialize filters with empty options (will be populated from API)
   const [filters, setFilters] = useState<FilterSection[]>([
@@ -209,8 +215,6 @@ export default function Home() {
     fetchProducts();
   }, [currentPage, itemsPerPage, sortBy, sortOrder, filters]);
 
-
-
   // Helper function to update option counts while preserving checked state
   const updateOptionCounts = (currentOptions: FilterOption[], newCounts: { name: string; count: number }[]) => {
     return currentOptions.map(option => {
@@ -256,6 +260,9 @@ export default function Home() {
       }))
     );
     setCurrentPage(1);
+    if (isMobile) {
+      setMobileFilterOpen(false);
+    }
   };
 
   const handleSortChange = useCallback((newSortBy: string, newSortOrder: 'asc' | 'desc') => {
@@ -263,6 +270,10 @@ export default function Home() {
     setSortOrder(newSortOrder);
     setCurrentPage(1); // Reset to first page when sorting changes
   }, []);
+
+  const applyFiltersAndClose = () => {
+    setMobileFilterOpen(false);
+  };
 
   // Skeleton loader for product cards
   const renderSkeletons = () => {
@@ -324,6 +335,63 @@ export default function Home() {
     ));
   };
 
+  // Mobile filter drawer
+  const mobileFilterDrawer = (
+    <Drawer
+      anchor="bottom"
+      open={mobileFilterOpen}
+      onClose={() => setMobileFilterOpen(false)}
+      sx={{
+        '& .MuiDrawer-paper': {
+          height: '85vh',
+          borderTopLeftRadius: '16px',
+          borderTopRightRadius: '16px',
+          overflow: 'hidden',
+        },
+      }}
+    >
+      <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: 1, borderColor: 'divider' }}>
+        <Typography variant="h6">Filters</Typography>
+        <IconButton onClick={() => setMobileFilterOpen(false)}>
+          <CloseIcon />
+        </IconButton>
+      </Box>
+      <Box sx={{ overflow: 'auto', height: '100%', p: 2 }}>
+        <FilterSidebar sections={filters} onFilterChange={handleFilterChange} />
+      </Box>
+      <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider', display: 'flex', gap: 2 }}>
+        <Button 
+          variant="outlined" 
+          onClick={clearAllFilters}
+          fullWidth
+        >
+          Clear All
+        </Button>
+        <Button 
+          variant="contained" 
+          onClick={applyFiltersAndClose}
+          fullWidth
+        >
+          Apply Filters
+        </Button>
+      </Box>
+    </Drawer>
+  );
+
+  // Mobile filter button
+  const mobileFilterButton = isMobile && (
+    <Box sx={{ mb: 2, display: 'flex', justifyContent: 'center' }}>
+      <Button
+        variant="outlined"
+        startIcon={<FilterListIcon />}
+        onClick={() => setMobileFilterOpen(true)}
+        sx={{ width: '100%', py: 1.5 }}
+      >
+        Show Filters
+      </Button>
+    </Box>
+  );
+
   if (error) {
     return (
       <div>
@@ -350,20 +418,26 @@ export default function Home() {
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6 lg:gap-10 px-4 sm:px-6 lg:px-10 mt-6 lg:mt-10">
-        <aside className="w-full lg:w-72 lg:sticky lg:top-20 lg:self-start order-2 lg:order-1">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold">Filters</h2>
-            <button 
-              onClick={clearAllFilters}
-              className="text-sm text-blue-600 hover:text-blue-800"
-            >
-              Clear all
-            </button>
-          </div>
-          <FilterSidebar sections={filters} onFilterChange={handleFilterChange} />
-        </aside>
+        {/* Desktop sidebar */}
+        {!isMobile && (
+          <aside className="w-full lg:w-72 lg:sticky lg:top-20 lg:self-start order-2 lg:order-1">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-semibold">Filters</h2>
+              <button 
+                onClick={clearAllFilters}
+                className="text-sm text-blue-600 hover:text-blue-800"
+              >
+                Clear all
+              </button>
+            </div>
+            <FilterSidebar sections={filters} onFilterChange={handleFilterChange} />
+          </aside>
+        )}
 
         <main className="flex-1 order-1 lg:order-2">
+          {/* Mobile filter button */}
+          {mobileFilterButton}
+          
           {/* Items per page selector and sorting */}
           <Box className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
             <Typography variant="body2" color="text.secondary" className="text-sm sm:text-base">
@@ -431,6 +505,9 @@ export default function Home() {
           )}
         </main>
       </div>
+
+      {/* Mobile filter drawer */}
+      {mobileFilterDrawer}
     </div>
   );
 }

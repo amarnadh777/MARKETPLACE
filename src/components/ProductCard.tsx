@@ -50,7 +50,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           borderBottom: '1px solid #f0f0f0'
         }}
       >
-        {/* Brand Logo */}
+        {/* Enhanced Brand Logo */}
         {product.vendorImage && (
           <Box
             sx={{
@@ -59,18 +59,23 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               left: 12,
               zIndex: 1,
               backgroundColor: 'white',
-              borderRadius: 2,
-              p: 0.5,
-              boxShadow: '0 2px 4px rgba(0,0,0,0.08)',
-              border: '1px solid #f0f0f0'
+              borderRadius: 3,
+              p: 1,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+              border: '1px solid #e0e0e0',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: { xs: 48, sm: 56 },
+              height: { xs: 48, sm: 56 }
             }}
           >
             <img
               src={product.vendorImage}
               alt={product.vendor}
               style={{
-                width: '24px',
-                height: '24px',
+                width: '100%',
+                height: '100%',
                 objectFit: 'contain'
               }}
               onError={(e) => {
@@ -139,6 +144,23 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           }
         }}
       >
+        {/* Vendor Name (New Addition) */}
+        {product.vendor && (
+          <Typography 
+            variant="body2"
+            sx={{
+              fontWeight: 600,
+              color: '#666',
+              mb: 0.5,
+              fontSize: '0.8rem',
+              textTransform: 'uppercase',
+              letterSpacing: 0.5
+            }}
+          >
+            {product.vendor}
+          </Typography>
+        )}
+        
         {/* Product Name */}
         <Typography 
           variant="h6" 
