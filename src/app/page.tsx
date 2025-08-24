@@ -1,103 +1,437 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useEffect, useCallback, useMemo } from "react";
+import Banner from "@/components/Banner";
+import Navbar from "@/components/Navbar";
+import ProductCard, { Product } from "@/components/ProductCard";
+import FilterSidebar, { FilterSection, FilterOption } from "@/components/FilterSidebar";
+import Pagination from "@/components/Pagination";
+import SortDropdown from "@/components/SortDropdown";
+import { FormControl, Select, MenuItem, Typography, Box, SelectChangeEvent, Grid } from '@mui/material';
+import Skeleton from '@mui/material/Skeleton';
+
+// Define the API response type
+interface ProductsResponse {
+  products: Product[];
+  categoryCounts: {
+    businessTypes: { name: string; count: number }[];
+    categories: { name: string; count: number }[];
+    subCategories: { name: string; count: number }[];
+    vendors: { name: string; count: number }[];
+    statuses: { name: string; count: number }[];
+  };
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+    itemsPerPage: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  };
+}
+
+// Define category data type
+interface CategoryData {
+  businessTypes: { name: string; count: number }[];
+  categories: { name: string; count: number }[];
+  subCategories: { name: string; count: number }[];
+  vendors: { name: string; count: number }[];
+  statuses: { name: string; count: number }[];
+}
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showLoading, setShowLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalItems, setTotalItems] = useState(0);
+  const [categoryData, setCategoryData] = useState<CategoryData | null>(null);
+  const [sortBy, setSortBy] = useState('name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+  // Initialize filters with empty options (will be populated from API)
+  const [filters, setFilters] = useState<FilterSection[]>([
+    {
+      id: 'businessType', title: 'Business Type', isCollapsed: false, showMoreThreshold: 6,
+      options: []
+    },
+    {
+      id: 'category', title: 'Category', isCollapsed: false, showMoreThreshold: 6,
+      options: []
+    },
+    {
+      id: 'subCategory', title: 'Sub Category', isCollapsed: false, showMoreThreshold: 6,
+      options: []
+    },
+    {
+      id: 'vendor', title: 'Vendor', isCollapsed: true, showMoreThreshold: 6,
+      options: []
+    },
+    {
+      id: 'status', title: 'Status', isCollapsed: true, showMoreThreshold: 6,
+      options: []
+    }
+  ]);
+
+  // Fetch initial category data
+  useEffect(() => {
+    const fetchCategoryData = async () => {
+      try {
+        const response = await fetch('/api/products?categoriesOnly=true');
+        if (!response.ok) {
+          throw new Error(`Failed to fetch category data: ${response.status}`);
+        }
+        const data: CategoryData = await response.json();
+        setCategoryData(data);
+        
+        // Update filters with data from API
+        setFilters(prev => prev.map(section => {
+          let options: FilterOption[] = [];
+          
+          switch(section.id) {
+            case 'businessType':
+              options = data.businessTypes.map(item => ({
+                id: item.name,
+                label: item.name,
+                count: item.count,
+                checked: false
+              }));
+              break;
+            case 'category':
+              options = data.categories.map(item => ({
+                id: item.name,
+                label: item.name,
+                count: item.count,
+                checked: false
+              }));
+              break;
+            case 'subCategory':
+              options = data.subCategories.map(item => ({
+                id: item.name,
+                label: item.name,
+                count: item.count,
+                checked: false
+              }));
+              break;
+            case 'vendor':
+              options = data.vendors.map(item => ({
+                id: item.name,
+                label: item.name,
+                count: item.count,
+                checked: false
+              }));
+              break;
+            case 'status':
+              options = data.statuses.map(item => ({
+                id: item.name,
+                label: item.name,
+                count: item.count,
+                checked: false
+              }));
+              break;
+            default:
+              options = [];
+          }
+          
+          return { ...section, options };
+        }));
+      } catch (err) {
+        console.error('Error fetching category data:', err);
+      }
+    };
+
+    fetchCategoryData();
+  }, []);
+
+  // Fetch products from API
+  useEffect(() => {
+    let loadingTimer: NodeJS.Timeout;
+    
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        
+        // Show loading skeleton after a short delay to prevent blinking
+        loadingTimer = setTimeout(() => {
+          setShowLoading(true);
+        }, 300);
+        
+        // Build query string inside useEffect to avoid infinite loops
+        const params = new URLSearchParams();
+        
+        // Add pagination parameters
+        params.append('page', currentPage.toString());
+        params.append('limit', itemsPerPage.toString());
+        
+        // Add sorting parameters
+        params.append('sortBy', sortBy);
+        params.append('sortOrder', sortOrder);
+        
+        // Add filter parameters
+        filters.forEach(section => {
+          const checkedOptions = section.options.filter(option => option.checked);
+          if (checkedOptions.length > 0) {
+            checkedOptions.forEach(option => {
+              params.append(section.id, option.id);
+            });
+          }
+        });
+        
+        const queryString = params.toString();
+        const response = await fetch(`/api/products?${queryString}`);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch products: ${response.status}`);
+        }
+        
+        const data: ProductsResponse = await response.json();
+        
+        setProducts(data.products);
+        setTotalPages(data.pagination.totalPages);
+        setTotalItems(data.pagination.totalItems);
+        
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred while fetching products');
+        console.error('Error fetching products:', err);
+      } finally {
+        if (loadingTimer) {
+          clearTimeout(loadingTimer);
+        }
+        setLoading(false);
+        setShowLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, [currentPage, itemsPerPage, sortBy, sortOrder]);
+
+  // Separate effect for filter changes to prevent infinite loops
+  useEffect(() => {
+    // Reset to first page when filters change
+    setCurrentPage(1);
+  }, [filters]);
+
+  // Helper function to update option counts while preserving checked state
+  const updateOptionCounts = (currentOptions: FilterOption[], newCounts: { name: string; count: number }[]) => {
+    return currentOptions.map(option => {
+      const newCount = newCounts.find(item => item.name === option.id);
+      return newCount ? { ...option, count: newCount.count } : option;
+    });
+  };
+
+  const handleFilterChange = (sectionId: string, optionId: string, checked: boolean) => {
+    setFilters(prev =>
+      prev.map(section =>
+        section.id === sectionId
+          ? { 
+              ...section, 
+              options: section.options.map(opt => 
+                opt.id === optionId ? { ...opt, checked } : opt
+              ) 
+            }
+          : section
+      )
+    );
+    
+    // Reset to first page when filters change
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    // Scroll to top when changing pages
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1); // Reset to first page when changing items per page
+  };
+
+  const clearAllFilters = () => {
+    setFilters(prev => 
+      prev.map(section => ({
+        ...section,
+        options: section.options.map(option => ({ ...option, checked: false }))
+      }))
+    );
+    setCurrentPage(1);
+  };
+
+  const handleSortChange = useCallback((newSortBy: string, newSortOrder: 'asc' | 'desc') => {
+    setSortBy(newSortBy);
+    setSortOrder(newSortOrder);
+    setCurrentPage(1); // Reset to first page when sorting changes
+  }, []);
+
+  // Skeleton loader for product cards
+  const renderSkeletons = () => {
+    return Array.from({ length: itemsPerPage }).map((_, index) => (
+      <div key={index} className="h-full">
+        <div className="h-full bg-white rounded-lg shadow-sm">
+          <Skeleton 
+            variant="rectangular" 
+            width="100%" 
+            height={200} 
+            animation="pulse"
+            sx={{ 
+              bgcolor: 'grey.100',
+              borderRadius: '12px 12px 0 0'
+            }}
+          />
+          <div className="p-4">
+            <Skeleton 
+              variant="text" 
+              width="70%" 
+              height={24} 
+              animation="pulse"
+              sx={{ bgcolor: 'grey.100', mb: 1 }}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            <Skeleton 
+              variant="text" 
+              width="50%" 
+              height={16} 
+              animation="pulse"
+              sx={{ bgcolor: 'grey.100', mb: 0.5 }}
+            />
+            <Skeleton 
+              variant="text" 
+              width="60%" 
+              height={16} 
+              animation="pulse"
+              sx={{ bgcolor: 'grey.100', mb: 0.5 }}
+            />
+            <Skeleton 
+              variant="text" 
+              width="40%" 
+              height={16} 
+              animation="pulse"
+              sx={{ bgcolor: 'grey.100', mb: 2 }}
+            />
+            <Skeleton 
+              variant="rectangular" 
+              width="100%" 
+              height={40} 
+              animation="pulse"
+              sx={{ 
+                bgcolor: 'grey.100',
+                borderRadius: 2
+              }}
+            />
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </div>
+    ));
+  };
+
+  if (error) {
+    return (
+      <div>
+        <Navbar />
+        <div className="flex justify-center items-center h-64">
+          <div className="text-lg text-red-600">Error: {error}</div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <Navbar />
+
+      <Banner
+        image="/banner.png"
+        alt="Banner"
+        title="Durable Construction: The 3M 6200 half face respirator, ensuring a durable and long-lasting product."
+        height={400}
+        buttonText="Order Now"
+      />
+
+      <div className="flex gap-10 px-10 mt-10">
+        <aside className="w-72 sticky top-20 self-start">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-semibold">Filters</h2>
+            <button 
+              onClick={clearAllFilters}
+              className="text-sm text-blue-600 hover:text-blue-800"
+            >
+              Clear all
+            </button>
+          </div>
+          <FilterSidebar sections={filters} onFilterChange={handleFilterChange} />
+        </aside>
+
+        <main className="flex-1">
+          {/* Items per page selector and sorting */}
+          <Box className="flex justify-between items-center mb-4">
+            <Typography variant="body2" color="text.secondary">
+              {loading ? (
+                <Skeleton variant="text" width={200} animation="wave" />
+              ) : (
+                `Showing ${(currentPage - 1) * itemsPerPage + 1} to ${Math.min(currentPage * itemsPerPage, totalItems)} of ${totalItems} products`
+              )}
+            </Typography>
+            <Box className="flex items-center space-x-4">
+              <SortDropdown 
+                sortBy={sortBy}
+                sortOrder={sortOrder}
+                onSortChange={handleSortChange}
+              />
+              <Box className="flex items-center">
+                <Typography variant="body2" sx={{ mr: 1 }}>Items per page:</Typography>
+                <FormControl size="small" sx={{ minWidth: 80 }}>
+                  <Select
+                    value={itemsPerPage}
+                    onChange={(e: SelectChangeEvent<number>) => handleItemsPerPageChange(Number(e.target.value))}
+                    sx={{ height: 40 }}
+                  >
+                    <MenuItem value={5}>5</MenuItem>
+                    <MenuItem value={10}>10</MenuItem>
+                    <MenuItem value={20}>20</MenuItem>
+                    <MenuItem value={50}>50</MenuItem>
+                  </Select>
+                </FormControl>
+              </Box>
+            </Box>
+          </Box>
+          
+          {/* Product grid */}
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mb-6">
+            {showLoading ? (
+              renderSkeletons()
+            ) : products.length > 0 ? (
+              products.map(product => (
+                <div key={product.id} className="h-full">
+                  <ProductCard product={product} />
+                </div>
+              ))
+            ) : (
+              <div className="col-span-full text-center py-10">
+                <p className="text-gray-500">No products found matching your filters.</p>
+                <button 
+                  onClick={clearAllFilters}
+                  className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                >
+                  Clear all filters
+                </button>
+              </div>
+            )}
+          </div>
+          
+          {/* Pagination */}
+          {totalPages > 1 && !loading && (
+            <Pagination 
+              totalPages={totalPages} 
+              currentPage={currentPage} 
+              onPageChange={handlePageChange} 
+            />
+          )}
+        </main>
+      </div>
     </div>
   );
 }
