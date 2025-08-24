@@ -437,7 +437,7 @@ const fetchProducts = async () => {
   }
 
   return (
-    <div>
+    <div className="pb-10">
       <Navbar   onSearch={(data) => { setSearchQuery(data) }}  suggestions={suggestions}  />
 
       <div className="px-4 sm:px-6 lg:px-10">
