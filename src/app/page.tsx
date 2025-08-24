@@ -54,6 +54,8 @@ export default function Home() {
   const [sortBy, setSortBy] = useState('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -156,64 +158,95 @@ export default function Home() {
   useEffect(() => {
     let loadingTimer: NodeJS.Timeout;
     
-    const fetchProducts = async () => {
-      try {
-        setLoading(true);
-        
-        // Show loading skeleton after a short delay to prevent blinking
-        loadingTimer = setTimeout(() => {
-          setShowLoading(true);
-        }, 300);
-        
-        // Build query string inside useEffect to avoid infinite loops
-        const params = new URLSearchParams();
-        
-        // Add pagination parameters
-        params.append('page', currentPage.toString());
-        params.append('limit', itemsPerPage.toString());
-        
-        // Add sorting parameters
-        params.append('sortBy', sortBy);
-        params.append('sortOrder', sortOrder);
-        
-        // Add filter parameters
-        filters.forEach(section => {
-          const checkedOptions = section.options.filter(option => option.checked);
-          if (checkedOptions.length > 0) {
-            checkedOptions.forEach(option => {
-              params.append(section.id, option.id);
-            });
-          }
+   // In your fetchProducts useEffect
+const fetchProducts = async () => {
+  try {
+    setLoading(true);
+    
+    // Show loading skeleton after a short delay to prevent blinking
+    loadingTimer = setTimeout(() => {
+      setShowLoading(true);
+    }, 300);
+    
+    // Build query string inside useEffect to avoid infinite loops
+    const params = new URLSearchParams();
+    
+    // Add pagination parameters
+    params.append('page', currentPage.toString());
+    params.append('limit', itemsPerPage.toString());
+    
+    // Add sorting parameters
+    params.append('sortBy', sortBy);
+    params.append('sortOrder', sortOrder);
+    
+    // Add search parameter if searchQuery exists
+    if (searchQuery.trim()) {
+      params.append('search', searchQuery.trim());
+    }
+    
+    // Add filter parameters
+    filters.forEach(section => {
+      const checkedOptions = section.options.filter(option => option.checked);
+      if (checkedOptions.length > 0) {
+        checkedOptions.forEach(option => {
+          params.append(section.id, option.id);
         });
-        
-        const queryString = params.toString();
-        const response = await fetch(`/api/products?${queryString}`);
-        
-        if (!response.ok) {
-          throw new Error(`Failed to fetch products: ${response.status}`);
-        }
-        
-        const data: ProductsResponse = await response.json();
-        
-        setProducts(data.products);
-        setTotalPages(data.pagination.totalPages);
-        setTotalItems(data.pagination.totalItems);
-        
-        setError(null);
+      }
+    });
+    
+    const queryString = params.toString();
+    const response = await fetch(`/api/products?${queryString}`);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch products: ${response.status}`);
+    }
+    
+    const data: ProductsResponse = await response.json();
+    
+    setProducts(data.products);
+    setTotalPages(data.pagination.totalPages);
+    setTotalItems(data.pagination.totalItems);
+    
+    setError(null);
+  } catch (err) {
+    setError(err instanceof Error ? err.message : 'An error occurred while fetching products');
+    console.error('Error fetching products:', err);
+  } finally {
+    if (loadingTimer) {
+      clearTimeout(loadingTimer);
+    }
+    setLoading(false);
+    setShowLoading(false);
+  }
+};
+
+    fetchProducts();
+  }, [currentPage, itemsPerPage, sortBy, sortOrder, filters,searchQuery]);
+
+
+
+  useEffect(() => {
+    if (searchQuery.trim() === "") {
+      setSuggestions([]); // clear suggestions if empty
+      return;
+    }
+
+    const fetchSuggestions = async () => {
+      try {
+        const res = await fetch(`/api/search?s=${searchQuery}`);
+        const data = await res.json();
+        console.log(data)
+       setSuggestions(data || []); // make sure API returns { suggestions: [] }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred while fetching products');
-        console.error('Error fetching products:', err);
-      } finally {
-        if (loadingTimer) {
-          clearTimeout(loadingTimer);
-        }
-        setLoading(false);
-        setShowLoading(false);
+        console.error("Error fetching suggestions:", err);
       }
     };
 
-    fetchProducts();
-  }, [currentPage, itemsPerPage, sortBy, sortOrder, filters]);
+    const debounceTimer = setTimeout(fetchSuggestions, 400); // debounce so it doesn’t call on every keystroke
+    return () => clearTimeout(debounceTimer);
+  }, [searchQuery]);
+
+
 
   // Helper function to update option counts while preserving checked state
   const updateOptionCounts = (currentOptions: FilterOption[], newCounts: { name: string; count: number }[]) => {
@@ -405,7 +438,7 @@ export default function Home() {
 
   return (
     <div>
-      <Navbar />
+      <Navbar   onSearch={(data) => { setSearchQuery(data) }}  suggestions={suggestions}  />
 
       <div className="px-4 sm:px-6 lg:px-10">
         <Banner

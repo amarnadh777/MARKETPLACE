@@ -1,19 +1,74 @@
 "use client";
-import React, { useState } from 'react';
-import { Search, ChevronDown, Menu, X } from 'lucide-react';
+import React, { useState, useRef, useEffect } from "react";
+import { Search, ChevronDown, Menu, X } from "lucide-react";
 import Image from "next/image";
-const Navbar = () => {
+
+interface Product {
+  name: string;
+  category: string;
+  subCategory: string;
+  vendor: string;
+}
+
+interface NavbarProps {
+  onSearch?: (query: string) => void;
+  suggestions?: Product[]; // Suggestions passed from parent
+  onSuggestionClick?: (suggestion: string) => void;
+}
+
+const Navbar = ({ onSearch, suggestions = [], onSuggestionClick }: NavbarProps) => {
   const [isProductsOpen, setIsProductsOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSuggestionsOpen, setIsSuggestionsOpen] = useState(false);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
 
   const products = [
-    'Procurement Software',
-    'Supply Chain Management',
-    'Vendor Management',
-    'Contract Management',
-    'Analytics & Reporting'
+    "Procurement Software",
+    "Supply Chain Management",
+    "Vendor Management",
+    "Contract Management",
+    "Analytics & Reporting",
   ];
+
+  // Update suggestions dropdown visibility based on suggestions and query
+  useEffect(() => {
+    setIsSuggestionsOpen(searchQuery.trim() !== "" && suggestions.length > 0);
+  }, [searchQuery, suggestions]);
+
+  // Handle clicks outside to close suggestions
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (suggestionsRef.current && !suggestionsRef.current.contains(event.target as Node)) {
+        setIsSuggestionsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+    if (onSearch) {
+      onSearch(value); // Notify parent of query change
+    }
+  };
+
+  const handleSuggestionClick = (suggestion: Product) => {
+    setSearchQuery(suggestion.name);
+    setIsSuggestionsOpen(false);
+    
+    // Notify parent about the clicked suggestion
+    if (onSuggestionClick) {
+      onSuggestionClick(suggestion.name);
+    }
+    
+    // Also notify about the search query change
+    if (onSearch) {
+      onSearch(suggestion.name);
+    }
+  };
 
   return (
     <nav className="bg-white shadow-md border-b border-gray-200">
@@ -33,9 +88,10 @@ const Navbar = () => {
                 className="flex items-center space-x-1 text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
               >
                 <span>Products</span>
-                <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isProductsOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown
+                  className={`w-4 h-4 transition-transform duration-200 ${isProductsOpen ? "rotate-180" : ""}`}
+                />
               </button>
-              
               {isProductsOpen && (
                 <div className="absolute top-full left-0 mt-1 w-64 bg-white rounded-md shadow-lg border border-gray-200 py-2 z-50">
                   {products.map((product, index) => (
@@ -51,18 +107,34 @@ const Navbar = () => {
               )}
             </div>
 
-            {/* Search Bar */}
-            <div className="relative">
+            {/* Search Bar with Suggestions */}
+            <div className="relative" ref={suggestionsRef}>
               <div className="flex items-center bg-gray-50 rounded-lg border border-gray-300 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-200 transition-all duration-200">
                 <Search className="w-4 h-4 text-gray-400 ml-3" />
                 <input
                   type="text"
                   placeholder="Search for products"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={handleSearchChange}
                   className="w-80 px-3 py-2 bg-transparent border-none outline-none text-sm text-gray-700 placeholder-gray-400"
                 />
               </div>
+              {isSuggestionsOpen && suggestions.length > 0 && (
+                <div className="absolute top-full left-0 mt-1 w-full bg-white rounded-md shadow-lg border border-gray-200 py-2 z-50 max-h-60 overflow-y-auto">
+                  {suggestions.map((suggestion, index) => (
+                    <div
+                      key={index}
+                      onClick={() => handleSuggestionClick(suggestion)}
+                      className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600 cursor-pointer transition-colors duration-200"
+                    >
+                      <div className="font-medium">{suggestion.name}</div>
+                      <div className="text-xs text-gray-500">
+                        {suggestion.category} • {suggestion.vendor}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Auth Buttons */}
@@ -82,11 +154,7 @@ const Navbar = () => {
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="text-gray-700 hover:text-blue-600 p-2"
             >
-              {isMobileMenuOpen ? (
-                <X className="w-6 h-6" />
-              ) : (
-                <Menu className="w-6 h-6" />
-              )}
+              {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
         </div>
@@ -101,9 +169,10 @@ const Navbar = () => {
                 className="flex items-center justify-between w-full text-left px-3 py-2 text-gray-700 hover:text-blue-600"
               >
                 <span className="font-medium">Products</span>
-                <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isProductsOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown
+                  className={`w-4 h-4 transition-transform duration-200 ${isProductsOpen ? "rotate-180" : ""}`}
+                />
               </button>
-              
               {isProductsOpen && (
                 <div className="pl-6 space-y-2 mt-2">
                   {products.map((product, index) => (
@@ -119,18 +188,34 @@ const Navbar = () => {
               )}
             </div>
 
-            {/* Mobile Search */}
-            <div className="px-3">
+            {/* Mobile Search with Suggestions */}
+            <div className="px-3 relative" ref={suggestionsRef}>
               <div className="flex items-center bg-gray-50 rounded-lg border border-gray-300 focus-within:border-blue-500">
                 <Search className="w-4 h-4 text-gray-400 ml-3" />
                 <input
                   type="text"
                   placeholder="Search for products"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={handleSearchChange}
                   className="w-full px-3 py-2 bg-transparent border-none outline-none text-sm text-gray-700 placeholder-gray-400"
                 />
               </div>
+              {isSuggestionsOpen && suggestions.length > 0 && (
+                <div className="mt-1 w-full bg-white rounded-md shadow-lg border border-gray-200 py-2 z-50 max-h-60 overflow-y-auto">
+                  {suggestions.map((suggestion, index) => (
+                    <div
+                      key={index}
+                      onClick={() => handleSuggestionClick(suggestion)}
+                      className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600 cursor-pointer transition-colors duration-200"
+                    >
+                      <div className="font-medium">{suggestion.name}</div>
+                      <div className="text-xs text-gray-500">
+                        {suggestion.category} • {suggestion.vendor}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Mobile Auth Buttons */}
@@ -146,11 +231,14 @@ const Navbar = () => {
         )}
       </div>
 
-      {/* Overlay for dropdown */}
-      {isProductsOpen && (
+      {/* Overlay for dropdowns */}
+      {(isProductsOpen || isSuggestionsOpen) && (
         <div
           className="fixed inset-0 z-40 bg-transparent"
-          onClick={() => setIsProductsOpen(false)}
+          onClick={() => {
+            setIsProductsOpen(false);
+            setIsSuggestionsOpen(false);
+          }}
         />
       )}
     </nav>
