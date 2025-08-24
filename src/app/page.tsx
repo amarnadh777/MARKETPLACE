@@ -207,13 +207,9 @@ export default function Home() {
     };
 
     fetchProducts();
-  }, [currentPage, itemsPerPage, sortBy, sortOrder]);
+  }, [currentPage, itemsPerPage, sortBy, sortOrder, filters]);
 
-  // Separate effect for filter changes to prevent infinite loops
-  useEffect(() => {
-    // Reset to first page when filters change
-    setCurrentPage(1);
-  }, [filters]);
+
 
   // Helper function to update option counts while preserving checked state
   const updateOptionCounts = (currentOptions: FilterOption[], newCounts: { name: string; count: number }[]) => {
@@ -343,13 +339,15 @@ export default function Home() {
     <div>
       <Navbar />
 
-      <Banner
-        image="/banner.png"
-        alt="Banner"
-        title="Durable Construction: The 3M 6200 half face respirator, ensuring a durable and long-lasting product."
-        height={400}
-        buttonText="Order Now"
-      />
+      <div className="px-10">
+        <Banner
+          image="/banner.png"
+          alt="Banner"
+          title="Durable Construction: The 3M 6200 half face respirator, ensuring a durable and long-lasting product."
+          height={400}
+          buttonText="Order Now"
+        />
+      </div>
 
       <div className="flex gap-10 px-10 mt-10">
         <aside className="w-72 sticky top-20 self-start">
