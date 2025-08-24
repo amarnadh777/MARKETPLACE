@@ -68,7 +68,7 @@ export default function FilterSidebar({
   };
 
   return (
-    <div className={cn("w-full max-w-sm bg-white rounded-lg shadow-sm border border-gray-200", className)}>
+    <div className={cn("w-full bg-white rounded-lg shadow-sm border border-gray-200", className)}>
       {sections.map((section, index) => {
         const sectionState = sectionStates[section.id] || { isCollapsed: false, showMore: false };
         const threshold = section.showMoreThreshold || 6;
@@ -82,11 +82,11 @@ export default function FilterSidebar({
             {/* Section Header */}
             <button
               onClick={() => toggleSection(section.id)}
-              className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
+              className="w-full flex items-center justify-between p-3 sm:p-4 text-left hover:bg-gray-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
               aria-expanded={!sectionState.isCollapsed}
               aria-controls={`section-${section.id}`}
             >
-              <h3 className="text-base font-semibold text-blue-600">
+              <h3 className="text-sm sm:text-base font-semibold text-blue-600">
                 {section.title}
               </h3>
               {sectionState.isCollapsed ? (
@@ -104,7 +104,7 @@ export default function FilterSidebar({
                 sectionState.isCollapsed ? "max-h-0" : "max-h-[1000px]"
               )}
             >
-              <div className="px-4 pb-4">
+              <div className="px-3 sm:px-4 pb-3 sm:pb-4">
                 <div className="space-y-2">
                   {visibleOptions.map((option) => (
                     <label
@@ -120,11 +120,11 @@ export default function FilterSidebar({
                             className="w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500 focus:ring-2 transition-colors duration-150"
                           />
                         </div>
-                        <span className="text-sm text-gray-700 group-hover:text-gray-900 transition-colors duration-150">
+                        <span className="text-xs sm:text-sm text-gray-700 group-hover:text-gray-900 transition-colors duration-150">
                           {option.label}
                         </span>
                       </div>
-                      <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full min-w-[2rem] text-center">
+                      <span className="text-xs sm:text-sm text-gray-500 bg-gray-100 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full min-w-[1.5rem] sm:min-w-[2rem] text-center">
                         ({option.count})
                       </span>
                     </label>

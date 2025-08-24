@@ -41,12 +41,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       <Box 
         sx={{ 
           position: 'relative',
-          height: 200,
+          height: { xs: 160, sm: 180, md: 200 },
           backgroundColor: '#fafafa',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          p: 2,
+          p: { xs: 1, sm: 2 },
           borderBottom: '1px solid #f0f0f0'
         }}
       >
@@ -69,8 +69,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               src={product.vendorImage}
               alt={product.vendor}
               style={{
-                width: 28,
-                height: 28,
+                width: '24px',
+                height: '24px',
                 objectFit: 'contain'
               }}
               onError={(e) => {
@@ -133,9 +133,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           display: 'flex',
           flexDirection: 'column',
           backgroundColor: '#ffffff',
-          p: 2.5,
+          p: { xs: 2, sm: 2.5 },
           '&:last-child': {
-            pb: 2.5
+            pb: { xs: 2, sm: 2.5 }
           }
         }}
       >
@@ -146,14 +146,14 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           sx={{
             fontWeight: 600,
             color: '#1a1a1a',
-            mb: 1.5,
+            mb: { xs: 1, sm: 1.5 },
             lineHeight: 1.3,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             display: '-webkit-box',
             WebkitLineClamp: 2,
             WebkitBoxOrient: 'vertical',
-            fontSize: '1rem'
+            fontSize: { xs: '0.9rem', sm: '1rem' }
           }}
         >
           {product.name}

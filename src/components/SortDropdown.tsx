@@ -45,50 +45,50 @@ export default function SortDropdown({
     onSortChange(sortBy, newOrder);
   };
 
-  return (
-    <Box className={`flex items-center space-x-2 ${className}`}>
-      <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.secondary' }}>
-        Sort by:
-      </Typography>
-      
-      <FormControl size="small" sx={{ minWidth: 120 }}>
-        <Select
-          value={sortBy}
-          onChange={handleSortChange}
-          displayEmpty
-          sx={{ 
-            height: 40,
-            '& .MuiSelect-select': {
-              paddingY: 1,
-              paddingX: 2,
-            }
-          }}
-        >
-          {sortOptions.map((option) => (
-            <MenuItem key={option.value} value={option.value}>
-              {option.label}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-      
-      <Button
-        variant="outlined"
-        size="small"
-        onClick={handleOrderChange}
-        startIcon={sortOrder === 'asc' ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
-        sx={{ 
-          height: 40,
-          textTransform: 'none',
-          minWidth: 'auto',
-          px: 2
-        }}
-        title={`Sort ${sortOrder === 'asc' ? 'Descending' : 'Ascending'}`}
-      >
-        <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-          {sortOrder === 'asc' ? 'Asc' : 'Desc'}
-        </Box>
-      </Button>
-    </Box>
-  );
+            return (
+            <Box className={`flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:space-x-2 ${className}`}>
+              <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.secondary', fontSize: '0.875rem' }}>
+                Sort by:
+              </Typography>
+
+              <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 120 } }}>
+                <Select
+                  value={sortBy}
+                  onChange={handleSortChange}
+                  displayEmpty
+                  sx={{
+                    height: 40,
+                    '& .MuiSelect-select': {
+                      paddingY: 1,
+                      paddingX: 2,
+                    }
+                  }}
+                >
+                  {sortOptions.map((option) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={handleOrderChange}
+                startIcon={sortOrder === 'asc' ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
+                sx={{
+                  height: 40,
+                  textTransform: 'none',
+                  minWidth: { xs: '100%', sm: 'auto' },
+                  px: 2
+                }}
+                title={`Sort ${sortOrder === 'asc' ? 'Descending' : 'Ascending'}`}
+              >
+                <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+                  {sortOrder === 'asc' ? 'Asc' : 'Desc'}
+                </Box>
+              </Button>
+            </Box>
+          );
 }

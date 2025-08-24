@@ -339,7 +339,7 @@ export default function Home() {
     <div>
       <Navbar />
 
-      <div className="px-10">
+      <div className="px-4 sm:px-6 lg:px-10">
         <Banner
           image="/banner.png"
           alt="Banner"
@@ -349,8 +349,8 @@ export default function Home() {
         />
       </div>
 
-      <div className="flex gap-10 px-10 mt-10">
-        <aside className="w-72 sticky top-20 self-start">
+      <div className="flex flex-col lg:flex-row gap-6 lg:gap-10 px-4 sm:px-6 lg:px-10 mt-6 lg:mt-10">
+        <aside className="w-full lg:w-72 lg:sticky lg:top-20 lg:self-start order-2 lg:order-1">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-semibold">Filters</h2>
             <button 
@@ -363,24 +363,25 @@ export default function Home() {
           <FilterSidebar sections={filters} onFilterChange={handleFilterChange} />
         </aside>
 
-        <main className="flex-1">
+        <main className="flex-1 order-1 lg:order-2">
           {/* Items per page selector and sorting */}
-          <Box className="flex justify-between items-center mb-4">
-            <Typography variant="body2" color="text.secondary">
+          <Box className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+            <Typography variant="body2" color="text.secondary" className="text-sm sm:text-base">
               {loading ? (
                 <Skeleton variant="text" width={200} animation="wave" />
               ) : (
                 `Showing ${(currentPage - 1) * itemsPerPage + 1} to ${Math.min(currentPage * itemsPerPage, totalItems)} of ${totalItems} products`
               )}
             </Typography>
-            <Box className="flex items-center space-x-4">
+            <Box className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:space-x-4 w-full sm:w-auto">
               <SortDropdown 
                 sortBy={sortBy}
                 sortOrder={sortOrder}
                 onSortChange={handleSortChange}
+                className="w-full sm:w-auto"
               />
-              <Box className="flex items-center">
-                <Typography variant="body2" sx={{ mr: 1 }}>Items per page:</Typography>
+              <Box className="flex items-center w-full sm:w-auto">
+                <Typography variant="body2" sx={{ mr: 1, fontSize: '0.875rem' }}>Items per page:</Typography>
                 <FormControl size="small" sx={{ minWidth: 80 }}>
                   <Select
                     value={itemsPerPage}
@@ -398,7 +399,7 @@ export default function Home() {
           </Box>
           
           {/* Product grid */}
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mb-6">
+          <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mb-6">
             {showLoading ? (
               renderSkeletons()
             ) : products.length > 0 ? (
