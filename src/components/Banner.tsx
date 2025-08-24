@@ -32,9 +32,9 @@ export default function Banner({
       {(title || buttonText) && (
         <div className="absolute inset-0 flex flex-col items-start justify-center px-4 sm:px-6 lg:px-10">
           {title && (
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white drop-shadow-lg mb-3 sm:mb-4 leading-tight">
-              {title}
-            </h1>
+          <h1 className="text-xl sm:text-1xl md:text-3xl lg:text-4xl xl:text-5xl font-medium text-white drop-shadow-lg mb-3 sm:mb-4 leading-tight">
+          {title}
+        </h1>
           )}
 
           {buttonText && (
